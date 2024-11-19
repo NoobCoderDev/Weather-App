@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather API Tests</title>
+</head>
+<body>
+    <h1>Weather API Tests</h1>
+    <div id="result"></div>
+
+    <script>
+        async function getWeatherData(location, days = 3) {
+            const response = await fetch('/api/weather', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ location, days }),
+            });
+            return response.ok ? await response.json() : null;
+        }
+
+        async function getHistoricalData(location, startDate, endDate) {
+            const response = await fetch('/api/historical', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ location, startDate, endDate }),
+            });
+            return response.ok ? await response.json() : null;
+        }
+
+        async function getCurrentLocationData(lat, lon) {
+            const response = await fetch('/api/current_location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lat, lon }),
+            });
+            return response.ok ? await response.json() : null;
+        }
+
+        window.runTest = async function(apiType, ...args) {
+            let result;
+            switch(apiType) {
+                case 'weather':
+                    result = await getWeatherData(...args);
+                    break;
+                case 'historical':
+                    result = await getHistoricalData(...args);
+                    break;
+                case 'current':
+                    result = await getCurrentLocationData(...args);
+                    break;
+            }
+            document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+        }
+    </script>
+</body>
+</html>

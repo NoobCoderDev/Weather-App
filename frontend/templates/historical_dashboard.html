@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}Historical Weather{% endblock %}
+
+{% block header %}
+<div class="container-fluid">
+    <div class="nk-header-wrap">
+        <div class="nk-menu-trigger d-xl-none ms-n1">
+            <a href="#" class="nk-nav-toggle nk-quick-nav-icon" data-target="sidebarMenu"><em
+                    class="icon ni ni-menu"></em>
+            </a>
+        </div>
+
+        <!-- Logo (left side) -->
+        <div class="nk-header-brand">
+            <a href="#" class="logo-link">
+                <img class="logo-dark logo-img" src="{{ url_for('static', filename='images/logo.jpg') }}" alt="logo">
+            </a>
+        </div>
+
+        <!-- Search Field (center) -->
+        <div class="nk-header-tools w-100">
+            <div class="form-control-wrap d-flex justify-content-center">
+                <div class="input-group w-100 w-max-400px w-max-550px-lg w-max-700px-xl">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><em class="icon ni ni-search"></em></span>
+                    </div>
+                    <input type="text" class="form-control" id="location" placeholder="Enter city or country name">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" id="fetchData"><em class="icon ni ni-arrow-right"></em></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile and Dropdown (right side) -->
+        <div class="nk-header-tools">
+            <ul class="nk-quick-nav">
+                <li class="dropdown user-dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <div class="user-toggle">
+                            <div class="user-avatar sm">
+                                <em class="icon ni ni-user-alt"></em>
+                            </div>
+                            <div class="user-info d-none d-md-block">
+                                <div class="user-status">User</div>
+                                <div class="user-name dropdown-indicator">John Doe</div>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-md dropdown-menu-right">
+                        <!-- Dropdown menu content... -->
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="nk-content">
+    <div class="container-fluid">
+        <div class="nk-content-inner">
+            <div class="nk-content-body">
+                <div class="nk-block-head">
+                    <div class="nk-block-head nk-block-head-sm">
+                        <div class="nk-block-between">
+                            <div class="nk-block-head-content">
+                                <h3 class="nk-block-title page-title">Weather history for <span id="locationName">Loading...</span></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nk-block">
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> Historical weather data is only available from today until 1 year before and data only visible for 35 days from the start date.
+                    </div>
+                    <div class="nk-block-between mb-3">
+                        <div class="nk-block-head-content">
+                            <div class="form-group">
+                                <div class="form-control-wrap">
+                                    <div class="form-icon form-icon-left">
+                                        <em class="icon ni ni-calendar"></em>
+                                    </div>
+                                    <input type="text" class="form-control date-picker" data-date-format="yyyy-mm-dd" id="startDate"
+                                        placeholder="Start Date">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nk-block-head-content">
+                            <div class="form-group">
+                                <div class="form-control-wrap">
+                                    <div class="form-icon form-icon-left">
+                                        <em class="icon ni ni-calendar"></em>
+                                    </div>
+                                    <input type="text" class="form-control date-picker" data-date-format="yyyy-mm-dd" id="endDate"
+                                        placeholder="End Date">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-preview">
+                        <div class="card-inner">
+                            <div class="table-responsive" data-simplebar style="max-height: 500px;">
+                                <table class="table table-striped nk-tb-list nk-tb-ulist">
+                                    <thead class="text-center">
+                                        <tr>
+                                            <th  scope="col">Date</th>
+                                            <th  scope="col">Temperature</th>
+                                            <th  scope="col">Humidity</th>
+                                            <th  scope="col">UV</th>
+                                            <th  scope="col">Wind</th>
+                                            <th  scope="col">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="forecastWeatherTable" class="text-center">
+                                        <!-- Data will be dynamically inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weather Details Model -->
+<div class="modal fade" id="weatherDetailsModal" tabindex="-1" role="dialog" aria-labelledby="weatherDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="weatherDetailsModalLabel">Weather Details</h5>
+                <a href="#" class="close" data-dismiss="modal" aria-label="Close">
+                    <em class="icon ni ni-cross"></em>
+                </a>
+            </div>
+            <div class="modal-content" id="weatherDetailsModalContent">
+                <!-- Content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-knob@1.2.11/dist/jquery.knob.min.js"></script>
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Initialize date pickers (this should be done when the page loads)
+        NioApp.Picker.date('.date-picker', {
+            format: 'yyyy-mm-dd'
+        });
+
+        var location = document.getElementById('location').value;
+        const fetchDataBtn = document.getElementById('fetchData');
+        var startDate = document.getElementById('startDate').value;
+        var endDate = document.getElementById('endDate').value;
+        var dataType = 'historical';
+
+        if (location == '') {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    // If start date or end date is empty, use appropriate dates
+                    const today = new Date();
+                    const sevenDaysAgo = new Date(today);
+                    sevenDaysAgo.setDate(today.getDate() - 7);
+
+                    const formattedToday = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                    const formattedSevenDaysAgo = sevenDaysAgo.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+                    if (!startDate) startDate = formattedSevenDaysAgo;
+                    if (!endDate) endDate = formattedToday;
+    
+                    // Create the URL for the weather API request
+                    const apiUrl = `/get_weather?lat=${lat}&lon=${lon}`;
+    
+                    // Use Fetch API to send the request and handle the response
+                    fetch(apiUrl)
+                        .then(response => response.json()) // Parse the JSON response
+                        .then(data => {
+    
+                            const city = data.location.name;
+                            // Initialize current location
+                            location = city;
+    
+                            fetch('/api/weather', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ location, dataType, startDate, endDate }),
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    console.log(data)
+                                    // Update location name
+                                    updateLocationName(data);
+    
+                                    //Update tables
+                                    updateTable(data);
+    
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                });
+    
+                        })
+                        .catch(error => {
+                            console.error("An error occured during get_weather : ", error)
+                        });
+    
+                }, function (error) {
+                    // Handle geolocation error
+                    console.error("An error occured during geolocation : ", error)
+                });
+            } else {
+                // Geolocation is not supported
+                console.error("An error occured during geo_location is not supported.")
+            }
+        }
+
+        fetchDataBtn.addEventListener('click', function () {
+            var location = document.getElementById('location').value;
+            var startDate = document.getElementById('startDate').value;
+            var endDate = document.getElementById('endDate').value;
+
+            // If start date or end date is empty, use appropriate dates
+            const today = new Date();
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 7);
+
+            const formattedToday = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const formattedSevenDaysAgo = sevenDaysAgo.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+            if (!startDate) startDate = formattedSevenDaysAgo;
+            if (!endDate) endDate = formattedToday;
+
+            fetch('/api/weather', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ location, dataType, startDate, endDate }),
+            })
+                .then(response => response.json())
+                .then(data => {
+
+                    // Update location name
+                    updateLocationName(data);
+
+                    //Update tables
+                    updateTable(data);
+
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+        //Update location Name
+        function updateLocationName(data) {
+            const locationNameElement = document.getElementById('locationName');
+            if (data && data.location && data.location.name) {
+                locationNameElement.textContent = data.location.name;
+                locationNameElement.style.color = 'green';
+            } else {
+                locationNameElement.textContent = 'Enter a valid city or country name.';
+                locationNameElement.style.color = 'red';
+            }
+        }
+
+        function showWeatherDetails(dayData) {
+            const content = `
+                <div class="modal-body">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Day Overview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-thermometer-half fa-2x text-primary me-3 pr-3"></i>
+                                        <div>
+                                            <small class="text-muted">Avg Temp</small>
+                                            <h6 class="mb-0">${dayData.day.avgtemp_c}°C / ${dayData.day.avgtemp_f}°F</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-tint fa-2x text-info me-3 pr-3"></i>
+                                        <div>
+                                            <small class="text-muted">Humidity</small>
+                                            <h6 class="mb-0">${dayData.day.avghumidity}%</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-wind fa-2x text-success me-3 pr-3"></i>
+                                        <div>
+                                            <small class="text-muted">Max Wind</small>
+                                            <h6 class="mb-0">${dayData.day.maxwind_kph} kph</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-sun fa-2x text-warning me-3 pr-3"></i>
+                                        <div>
+                                            <small class="text-muted">UV Index</small>
+                                            <h6 class="mb-0">${dayData.day.uv}</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-cloud-rain fa-2x text-primary me-3 pr-3"></i>
+                                        <div>
+                                            <small class="text-muted">Precipitation</small>
+                                            <h6 class="mb-0">${dayData.day.totalprecip_mm} mm</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-eye fa-2x text-secondary me-3 pr-3"></i>
+                                        <div>
+                                            <small class="text-muted">Visibility</small>
+                                            <h6 class="mb-0">${dayData.day.avgvis_km} km</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <img src="${dayData.day.condition.icon}" alt="${dayData.day.condition.text}" class="img-fluid mb-2 pr-3" style="width: 64px;">
+                                    <h5>${dayData.day.condition.text}</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Hourly Forecast</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive" data-simplebar style="max-height: 400px;">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Temp</th>
+                                            <th>Condition</th>
+                                            <th>Wind</th>
+                                            <th>Humidity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${dayData.hour.map(hour => `
+                                            <tr>
+                                                <td>${hour.time.split(' ')[1]}</td>
+                                                <td>${hour.temp_c}°C</td>
+                                                <td>
+                                                    <img src="${hour.condition.icon}" alt="${hour.condition.text}" style="width: 32px;">
+                                                    ${hour.condition.text}
+                                                </td>
+                                                <td>${hour.wind_kph} kph ${hour.wind_dir}</td>
+                                                <td>${hour.humidity}%</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        
+            // Set the modal title
+            document.getElementById('weatherDetailsModalLabel').textContent = `Weather Details for ${dayData.date}`;
+        
+            // Set the modal content
+            document.getElementById('weatherDetailsModalContent').innerHTML = content;
+        
+            // Show the modal using Bootstrap
+            new bootstrap.Modal(document.getElementById('weatherDetailsModal')).show();
+        }
+
+        function updateTable(data) {
+            // Update Current Weather Table
+            if (data && data.historical) {
+                forecastWeatherTable.innerHTML = data.historical.map(historical => {
+                    return `
+                    <tr>
+                        <td class="align-middle">${historical.date}</td>
+                        <td class="align-middle">${historical.day.avgtemp_c}°C</td>
+                        <td class="align-middle">${historical.day.avghumidity}%</td>
+                        <td class="align-middle">${historical.day.uv}</td>
+                        <td class="align-middle">${historical.day.maxwind_kph}kph</td>
+                        <td class="align-middle">
+                            <button class="btn btn-sm btn-primary view-details" data-date="${historical.date}"
+                                <em class="icon ni ni-eye"></em>
+                                <span>View Details</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+
+                // Add event listeners to all "View Details" buttons
+                document.querySelectorAll('.view-details').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const date = this.getAttribute('data-date');
+                        const dayData = data.historical.find(item => item.date === date);
+                        showWeatherDetails(dayData);
+                    });
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}
+                                            

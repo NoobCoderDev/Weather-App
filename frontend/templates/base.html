@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Weather App{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- DashLite CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashlite.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="nk-body bg-lighter npc-default has-sidebar">
+    <div class="nk-app-root">
+        <!-- Main content -->
+        <div class="nk-main">
+            <!-- Sidebar -->
+            <div class="nk-sidebar nk-sidebar-fixed is-dark" data-content="sidebarMenu">
+                <div class="nk-sidebar-element nk-sidebar-head">
+                    <div class="nk-menu-trigger"> 
+                        <a href="#" class="nk-nav-toggle nk-quick-nav-icon d-xl-none" data-target="sidebarMenu">
+                            <em class="icon ni ni-arrow-left"></em>
+                        </a> 
+                    </div>
+                </div>  
+                <div class="nk-sidebar-element nk-sidebar-body">
+                    <div class="nk-sidebar-content">
+                        <div class="nk-sidebar-menu" data-simplebar>
+                            <ul class="nk-menu pl-3">
+                                <li class="nk-menu-heading">
+                                    <h6 class="overline-title text-primary-alt">Weather Information</h6>
+                                </li>
+                                <li class="nk-menu-item">
+                                    <a href="{{ url_for('current_dashboard') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-sun-fill"></em></span>
+                                        <span class="nk-menu-text">Current Weather</span>
+                                    </a>
+                                </li>
+                                <li class="nk-menu-item">
+                                    <a href="{{ url_for('historical_dashboard') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-history"></em></span>
+                                        <span class="nk-menu-text">Historical Weather</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Wrap -->
+            <div class="nk-wrap">
+                <!-- Header -->
+                <div class="nk-header nk-header-fixed is-light">
+                    {% block header %}
+                    <!-- Header content goes here -->
+                    {% endblock %}
+                </div>
+                <!-- Content -->
+                <div class="nk-content mt-xl-0">
+                    <div class="container-fluid">
+                        <div class="nk-content-inner">
+                            <div class="nk-content-body">
+                                {% block content %}
+                                <!-- Main dashboard content goes here -->
+                                {% endblock %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Footer -->
+                <div class="nk-footer nk-footer-fixed">
+                    <div class="container-fluid">
+                        <div class="nk-footer-wrap g-2">
+                            <div class="nk-footer-links">
+                                <ul class="nav nav-sm">
+                                    <li class="nav-item" >
+                                        <a class="nav-link" href="#">About Us</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#">Terms & Conditions</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#">Support</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#">Privacy Policy</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="nk-footer-text">
+                                <p>&copy; 2024 WeatherApp. All rights reserved.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="{{ url_for('static', filename='js/bundle.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- <script src="{{ url_for('static', filename='js/charts/chart-apex.js') }}"></script> -->
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

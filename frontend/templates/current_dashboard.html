@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+
+{% block title %}Current Weather{% endblock %}
+
+{% block header %}
+<div class="nk-header nk-header-fixed is-light">
+    <div class="container-fluid">
+        <div class="nk-header-wrap">
+            <div class="nk-menu-trigger d-xl-none ms-n1">
+                <a href="#" class="nk-nav-toggle nk-quick-nav-icon" data-target="sidebarMenu" id="sidebarMenu"><em
+                        class="icon ni ni-menu"></em>
+                </a>
+            </div>
+
+            <!-- Logo (left side) -->
+            <div class="nk-header-brand">
+                <a href="#" class="logo-link">
+                    <img class="logo-dark logo-img" src="{{ url_for('static', filename='images/logo.jpg') }}"
+                        alt="logo">
+                </a>
+            </div>
+
+            <!-- Search Field (center) -->
+            <div class="nk-header-tools w-100">
+                <div class="form-control-wrap d-flex justify-content-center">
+                    <div class="input-group w-100 w-max-400px w-max-550px-lg w-max-700px-xl">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><em class="icon ni ni-search"></em></span>
+                        </div>
+                        <input type="text" class="form-control" id="location" placeholder="Enter city or country name" pattern="[A-Za-z]+" required>
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" id="fetchData"><em
+                                    class="icon ni ni-arrow-right"></em></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile and Dropdown (right side) -->
+            <div class="nk-header-tools">
+                <ul class="nk-quick-nav">
+                    <li class="dropdown user-dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <div class="user-toggle">
+                                <div class="user-avatar sm">
+                                    <em class="icon ni ni-user-alt"></em>
+                                </div>
+                                <div class="user-info d-none d-md-block">
+                                    <div class="user-status">User</div>
+                                    <div class="user-name dropdown-indicator">John Doe</div>
+                                </div>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-md dropdown-menu-right">
+                            <!-- Dropdown menu content... -->
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="nk-content-inner">
+        <div class="nk-content-body">
+            <div class="nk-block">
+                <div class="nk-block-head nk-block-head-sm">
+                    <div class="nk-block-between">
+                        <div class="nk-block-head-content">
+                            <h3 class="nk-block-title page-title">Weather for <span id="locationName">Loading...</span></h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-gs">
+                    <!-- Weather Data -->
+                    <!-- <div class="col-12">
+                        <div id="weatherData" class="card card-bordered" style="display: none;">
+                            <div class="card-inner">
+                                Weather data will be dynamically inserted here
+                            </div>
+                        </div>
+                    </div> -->
+
+                    <!-- Two Tables in One Row -->
+                    <div class="col-xxl-6 col-md-6">
+                        <div class="card card-bordered h-100">
+                            <div class="card-inner">
+                                <h6 class="card-title">Forecast Daily</h6>
+                                <div class="table-responsive" data-simplebar style="max-height: 500px;">
+                                    <table class="table table-striped">
+                                        <thead class="table-light text-center">
+                                            <tr>
+                                                <th scope="col">Date</th>
+                                                <th scope="col">Sky</th>
+                                                <th scope="col">Condition</th>
+                                                <th scope="col">High</th>
+                                                <th scope="col">Low</th>
+                                                <th scope="col">Chance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="forecastWeatherTable" class="text-center">
+                                            <!-- Data will be dynamically inserted here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xxl-6 col-md-6">
+                        <div class="card card-bordered h-100">
+                            <div class="card-inner">
+                                <h6 class="card-title">Forecast Hourly</h6>
+                                <div class="table-responsive" data-simplebar style="max-height: 500px;">
+                                    <table class="table table-striped">
+                                        <thead class="table-light text-center">
+                                            <tr>
+                                                <th scope="col">Time</th>
+                                                <th scope="col">Temp</th>
+                                                <th scope="col">Sky</th>
+                                                <th scope="col">Conditions</th>
+                                                <th scope="col">Chance</th>
+                                                <th scope="col">Humidity</th>
+                                                <th scope="col">Gust</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="forecastHourlyTable" class="text-center">
+                                            <!-- Data will be dynamically inserted here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Line Chart -->
+                    <div class="col-xxl-6 col-md-6">
+                        <div class="card card-bordered h-100">
+                            <div class="card-inner">
+                                <div class="card-title-group align-start mb-2">
+                                    <div class="card-title">
+                                        <h6 class="title">Temperature</h6>
+                                    </div>
+                                </div>
+                                <div class="nk-ck-sm">
+                                    <canvas id="temperatureChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daily Temperature Range Chart -->
+                    <div class="col-xxl-6 col-md-6">
+                        <div class="card card-bordered h-100">
+                            <div class="card-inner">
+                                <div class="card-title-group align-start mb-2">
+                                    <div class="card-title">
+                                        <h6 class="title">Daily Temperature Range</h6>
+                                    </div>
+                                </div>
+                                <div class="nk-ck-sm">
+                                    <canvas class="bar-chart" id="barChartData"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Humidity Trend Chart -->
+                    <div class="col-xxl-6 col-md-6">
+                        <div class="card card-bordered h-100">
+                            <div class="card-inner">
+                                <div class="card-title-group align-start mb-2">
+                                    <div class="card-title">
+                                        <h6 class="title">Humidity</h6>
+                                    </div>
+                                </div>
+                                <div class="nk-ck-sm">
+                                    <canvas class="line-chart" id="filledLineChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Embedded Map from google map -->
+                    <div class="col-xxl-6 col-md-6">
+                        <div class="card card-bordered h-100">
+                            <!-- <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2601.505044854071!2d75.89851878760152!3d22.76227423393931!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x396302b2bcecbfbd%3A0x482f4b02153441b2!2sSkye%20Corporate%20Park!5e0!3m2!1sen!2sin!4v1731574265419!5m2!1sen!2sin"
+                                width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"></iframe> -->
+                            <div id="map" style="height: 300px;"></div>
+                        </div> 
+                    </div>  
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-knob@1.2.11/dist/jquery.knob.min.js"></script>
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        let temperatureChart;
+
+        function initializeTemperatureChart() {
+            const ctx = document.getElementById('temperatureChart');
+            if (ctx) {
+                temperatureChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Temperature (°C)',
+                            data: [],
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        initializeTemperatureChart();
+
+        let dailyTempRangeChart;
+
+        function initializeDailyTempRangeChart() {
+            const ctx = document.getElementById('barChartData');
+            if (ctx) {
+                dailyTempRangeChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                label: 'Max Temperature',
+                                data: [],
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                borderColor: 'rgb(255, 99, 132)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Min Temperature',
+                                data: [],
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgb(54, 162, 235)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: 'Temperature (°C)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Daily Temperature Range'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        initializeDailyTempRangeChart();
+
+        let humidityTrendChart;
+
+        function initializeHumidityTrendChart() {
+            const ctx = document.getElementById('filledLineChart');
+            if (ctx) {
+                humidityTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Humidity',
+                            data: [],
+                            fill: true,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Humidity (%)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Humidity'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        initializeHumidityTrendChart();
+
+        var location = document.getElementById('location').value;
+        const fetchDataBtn = document.getElementById('fetchData');
+        var dataType = 'forecast';
+
+        console.log("Location : ",location)
+            if(location==''){
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        
+                        console.log("Latitude: " + lat);
+                        console.log("Longitude: " + lon);
+    
+                        // Create the URL for the weather API request
+                        const apiUrl = `/get_weather?lat=${lat}&lon=${lon}`;
+    
+                        // Use Fetch API to send the request and handle the response
+                        fetch(apiUrl)
+                            .then(response => response.json()) // Parse the JSON response
+                            .then(data => {
+        
+                                    const city = data.location.name;
+                                    // Initialize current location
+                                    location = city;
+                                    var days = 7;
+
+                                    fetch('/api/weather', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ location, dataType, days }),
+                                    })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            console.log(data);
+
+                                            // Update location name
+                                            updateLocationName(data);
+                        
+                                            //Update tables
+                                            updateTables(data);
+                        
+                                            //Update Temperature chart
+                                            updateTemperatureChart(data);
+                        
+                                            // Update the daily temperature range chart
+                                            updateDailyTempRangeChart(data);
+                        
+                                            //Update the daily humidity
+                                            updateHumidityTrendChart(data);
+                        
+                        
+                                        })
+                                        .catch(error => {
+                                            console.error('Error:', error);
+                                        });
+    
+                            })
+                            .catch(error => {
+                                console.error("An error occured during get_weather : ", error)
+                            });
+    
+                    }, function(error) {
+                        // Handle geolocation error
+                        console.error("An error occured during geolocation : ", error)
+                    });
+                } else {
+                    // Geolocation is not supported
+                    console.error("An error occured during geo_location is not supported.")
+                }
+            }
+
+        fetchDataBtn.addEventListener('click', function () {
+            var location = document.getElementById('location').value;
+            var days = 7;
+            fetch('/api/weather', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ location, dataType, days }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+
+                    // Update location name
+                    updateLocationName(data);
+
+                    //Update tables
+                    updateTables(data);
+
+                    //Update Temperature chart
+                    updateTemperatureChart(data);
+
+                    // Update the daily temperature range chart
+                    updateDailyTempRangeChart(data);
+
+                    //Update the daily humidity
+                    updateHumidityTrendChart(data);
+
+
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+        //Update location Name
+        function updateLocationName(data) {
+            const locationNameElement = document.getElementById('locationName');
+            if (data && data.location && data.location.name) {
+                locationNameElement.textContent = data.location.name;
+                locationNameElement.style.color = 'green';
+            } else {
+                locationNameElement.textContent = 'Enter a valid city or country name.';
+                locationNameElement.style.color = 'red';
+            }
+        }
+
+        function updateTables(data) {
+            console.log("Update Tables : ", data)
+            // Update Current Weather Table
+            if (data) {
+                forecastWeatherTable.innerHTML = data.forecast.map(forecast => {
+                    return `
+                    <tr>
+                        <td class="align-middle">${forecast.date}</td>
+                        <td class="align-middle"><img src="${forecast.day.condition.icon}" alt="weather icon" /></td>
+                        <td class="align-middle">${forecast.day.condition.text}</td>
+                        <td class="align-middle">${forecast.day.maxtemp_c}°C</td>
+                        <td class="align-middle">${forecast.day.mintemp_c}°C</td>
+                        <td class="align-middle">${forecast.day.daily_chance_of_rain}%</td>
+                    </tr>
+                `;
+                }).join('');
+            }
+
+            // Update Forecast Summary Table
+            if (data && data.forecast && data.forecast[0] && data.forecast[0].hour) {
+                forecastHourlyTable.innerHTML = data.forecast[0].hour.map(hour => {
+                    return `
+                <tr>
+                    <td class="align-middle">${new Date(hour.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td class="align-middle">${hour.temp_c}°C</td>
+                    <td class="align-middle"><img src="${hour.condition.icon}" alt="weather icon" /></td>
+                    <td class="align-middle">${hour.condition.text}</td>
+                    <td class="align-middle">${hour.chance_of_rain}%</td>
+                    <td class="align-middle">${hour.humidity}%</td>
+                    <td class="align-middle">${hour.gust_kph} km/h</td>
+                </tr>
+            `}).join('');
+            }
+        }
+
+        //Update forecast Temperature
+        function updateTemperatureChart(data) {
+            console.log("Update TemperatureChart : ", data)
+            if (!temperatureChart) {
+                initializeTemperatureChart();
+            }
+
+            if (temperatureChart && data && data.forecast && data.forecast[0] && data.forecast[0].hour) {
+                const hourlyData = data.forecast[0].hour;
+                const labels = hourlyData.map(hour => hour.time.split(' ')[1]); // Extract time
+                const temperatures = hourlyData.map(hour => hour.temp_c);
+
+                temperatureChart.data.labels = labels;  
+                temperatureChart.data.datasets[0].data = temperatures;
+                temperatureChart.update();
+            } else {
+                console.warn('Unable to update temperature chart. Chart or data not available.');
+            }
+        }
+
+        //Update Forecast Daily time chart
+        function updateDailyTempRangeChart(data) {
+            console.log("Update TempRangeChart : ", data)
+            if (!dailyTempRangeChart) {
+                console.warn('Daily temperature range chart not initialized. Initializing now.');
+                initializeDailyTempRangeChart();
+            }
+
+            if (dailyTempRangeChart && data && data.forecast) {
+                const labels = data.forecast.map(day => day.date);
+                const maxTemps = data.forecast.map(day => day.day.maxtemp_c);
+                const minTemps = data.forecast.map(day => day.day.mintemp_c);
+
+                dailyTempRangeChart.data.labels = labels;
+                dailyTempRangeChart.data.datasets[0].data = maxTemps;
+                dailyTempRangeChart.data.datasets[1].data = minTemps;
+                dailyTempRangeChart.update();
+            } else {
+                console.warn('Unable to update daily temperature range chart. Chart or data not available.');
+            }
+        }
+
+        //Update forecast humidity
+        function updateHumidityTrendChart(data) {
+            console.log("Update HumidityTrendChart : ", data)
+            if (!humidityTrendChart) {
+                console.warn('Humidity trend chart not initialized. Initializing now.');
+                initializeHumidityTrendChart();
+            }
+
+            if (humidityTrendChart && data && data.forecast && data.forecast[0] && data.forecast[0].hour) {
+                const hourlyData = data.forecast[0].hour;
+                const labels = hourlyData.map(hour => hour.time.split(' ')[1]); // Extract time
+                const humidityLevels = hourlyData.map(hour => hour.humidity);
+
+                humidityTrendChart.data.labels = labels;
+                humidityTrendChart.data.datasets[0].data = humidityLevels;
+                humidityTrendChart.update();
+            } else {
+                console.warn('Unable to update humidity trend chart. Chart or data not available.');
+            }
+        }
+
+        // Weather map 
+        const Weather_MAP_API_KEY = "d9d3b948fa96bb147a2d746e365ace77"; // Replace with your OpenWeatherMap API Key
+
+        // Step 2: Initialize the Leaflet map
+        const map = L.map('map').setView([22.752343747775452, 75.86318068206312], 2); // Default view (Indore coordinates)
+
+        // Set up the OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Step 3: Function to fetch weather data
+        function getWeatherData(lat, lon) {
+            console.log(lat, lon)
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${Weather_MAP_API_KEY}&units=metric`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    // Parse weather data
+                    const weather = data.weather[0].description;
+                    const temperature = data.main.temp;
+                    const city = data.name;
+                    const iconCode = data.weather[0].icon;
+                    const iconUrl = `http://openweathermap.org/img/wn/${iconCode}.png`;
+
+                    L.marker([lat, lon]).addTo(map)
+                        .bindPopup(`Weather in ${city}, ${temperature}°C, ${weather}`)
+                        .openPopup();
+
+                })
+                .catch(error => {
+                    console.error('Error fetching weather data:', error);
+                });
+        }
+
+        // Step 4: Event listener to handle clicks on the map
+        map.on('click', function(event) {
+            const lat = event.latlng.lat;
+            const lon = event.latlng.lng;
+
+            // Create a marker at the clicked location
+            L.marker([lat, lon]).addTo(map)
+                .openPopup('Selected Location')
+                .openPopup();
+
+            // Fetch and display the weather for the clicked location
+            getWeatherData(lat, lon);
+        });
+
+
+    });
+</script>
+{% endblock %}
