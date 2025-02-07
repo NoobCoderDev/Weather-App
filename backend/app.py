@@ -3,6 +3,8 @@ import requests
 from datetime import datetime, timedelta
 from config import API_KEY
 import logging
+from pyngrok import ngrok
+import os
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
 
@@ -85,5 +87,27 @@ def get_weather_for_current_location():
         logging.exception("An error occurred while processing the request")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
+def setup_ngrok():
+    try:
+        # Get auth token from environment variable
+        auth_token = os.getenv('NGROK_AUTH_TOKEN')
+        
+        # Set auth token if available
+        if auth_token:
+            ngrok.set_auth_token(auth_token)
+        
+        # Create tunnel
+        public_url = ngrok.connect(5000)
+        print(' * Public URL:', public_url)
+        return public_url
+    except Exception as e:
+        print(f'Error setting up ngrok: {e}')
+        return None
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    public_url = setup_ngrok()
+    if public_url:
+        print("Server starting with ngrok tunnel...")
+        app.run(debug=True)
+    else:
+        print("Failed to establish ngrok tunnel")
