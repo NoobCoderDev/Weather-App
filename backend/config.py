@@ -1,6 +1,7 @@
-API_KEY = "6324e6327299448d87393500241311"
-WEATHER_MAP_API_KEY = "d9d3b948fa96bb147a2d746e365ace77"
-CHATWOOT_API_TOKEN="Gjw5EMm4MgJx3sJh8pZJHjPi"
-CHATWOOT_ACCOUNT_ID="112316"
-CHATWOOT_INBOX_ID="VXjQQ7xARGHDe65eMQnP58Qe"
+API_KEY = "your_weather_api_key"
+WEATHER_MAP_API_KEY = "your_weather_map_api_key"
+CHATWOOT_API_TOKEN="your_chatwoot_api_token"
+CHATWOOT_ACCOUNT_ID="your_chatwoot_account_id"
+CHATWOOT_INBOX_ID="inbox_id"
 CHATWOOT_BASE_URL="https://app.chatwoot.com/api/v1"
+
