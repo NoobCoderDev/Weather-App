@@ -10,6 +10,31 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashlite.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <style>
+        /* Base styles */
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Widget styles */
+        .woot-widget-holder {
+            overflow: hidden !important;
+            height: 100% !important;
+            max-height: 100vh !important;
+        }
+
+        .woot-widget-bubble {
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
+        }
+
+        /* Prevent scrollbar issues */
+        .woot-widget-content {
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 
@@ -100,6 +125,23 @@
         </div>
     </div>
 
+    <script>
+        (function(d,t) {
+          var BASE_URL="https://app.chatwoot.com";
+          var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+          g.src=BASE_URL+"/packs/js/sdk.js";
+          g.defer = true;
+          g.async = true;
+          s.parentNode.insertBefore(g,s);
+          g.onload=function(){
+            window.chatwootSDK.run({
+              websiteToken: '5GLEoWCoLr5FPFDLxMtE2UE5',
+              baseUrl: BASE_URL
+            })
+          }
+        })(document,"script");
+    </script>
+
     <!-- JavaScript -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="{{ url_for('static', filename='js/bundle.js') }}"></script>
@@ -108,6 +150,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- <script src="{{ url_for('static', filename='js/charts/chart-apex.js') }}"></script> -->
     {% block extra_js %}{% endblock %}
+    <!--Start of Chatwoot Script-->
 </body>
 
 </html>
